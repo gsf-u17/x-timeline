@@ -1,0 +1,42 @@
+name: Update X Timeline JSON
+
+on:
+  schedule:
+    # 15分おきに自動実行
+    - cron: '*/15 * * * *'
+  # 手動で「今すぐ更新」したい時用のボタン
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: Node.jsを準備
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: DiscordとXの情報を取得
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
+          REPOST_DEFAULT_LABEL: 'リポスト'
+        run: node update.mjs
+
+      - name: 変更があれば保存
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tweets.json cache_fx.json
+          if git diff --staged --quiet; then
+            echo "変更はありませんでした"
+          else
+            git commit -m "Update timeline data"
+            git push
+          fi
