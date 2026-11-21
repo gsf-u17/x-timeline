@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timeline Data Status</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8fafc;
+      color: #334155;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .box {
+      max-width: 480px;
+      margin: 0 auto;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .ok { color: #059669; font-weight: bold; }
+    .err { color: #dc2626; font-weight: bold; }
+    code {
+      display: block;
+      margin-top: 12px;
+      padding: 10px;
+      background: #f1f5f9;
+      border-radius: 6px;
+      word-break: break-all;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h3>Timeline Data Status</h3>
+    <p id="status">データを確認中...</p>
+    <code id="json-url"></code>
+  </div>
+  <script>
+    const jsonUrl = new URL('./tweets.json', location.href).href;
+    document.getElementById('json-url').textContent = jsonUrl;
+    fetch('./tweets.json?t=' + Date.now())
+      .then((res) => {
+        if (!res.ok) throw new Error('まだデータが作られていません');
+        return res.json();
+      })
+      .then((data) => {
+        const dt = data.updated_at ? new Date(data.updated_at).toLocaleString('ja-JP') : '不明';
+        document.getElementById('status').innerHTML =
+          `<span class="ok">稼働中</span><br>読み込み件数：${data.count ?? 0}件<br>最終更新：${dt}`;
+      })
+      .catch((e) => {
+        document.getElementById('status').innerHTML =
+          `<span class="err">待機中</span><br>${e.message}`;
+      });
+  </script>
+</body>
+</html>
